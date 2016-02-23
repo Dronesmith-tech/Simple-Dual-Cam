@@ -2,7 +2,9 @@
 <html>
 <head>
   <meta name="viewport" content="initial-scale=1"/>
-  <title>edi-cam</title>
+  <title>Luci Cam</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+    integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
   <style type="text/css">
     .container {
       margin-top: 10%;
@@ -14,24 +16,38 @@
       height: 480px;
       border: 1px solid #ccc;
     }
+
+    #canvas-video2 {
+      width: 640px;
+      height: 480px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
-  <!-- Reference: https://github.com/phoboslab/jsmpeg/blob/master/stream-example.html -->
+  <div class="containe-fluidr">
+    <div class="row">
+      <h1 class="text-center">Luci Feed</h1>
+      <hr>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <h2 class="text-center">Normal</h2>
+        <canvas id="canvas-video" width="640" height="480"></canvas>
+      </div>
 
-  <div class="container">
-    <!--
-      The canvas size specified here is the "initial" internal resolution. jsmpeg will
-      change this internal resolution to whatever the source provides. The size the
-      canvas is displayed on the website is dictated by the CSS style.
-    -->
-    <canvas id="canvas-video" width="640" height="480"></canvas>
+      <div class="col-md-6">
+        <h2 class="text-center">Thermal</h2>
+        <canvas id="canvas-video2" width="640" height="480"></canvas>
+      </div>
+    </div>
   </div>
 
   <script src="/jsmpg.js"></script>
   <script type="text/javascript">
     // CHANGE THIS TO THE APPROPRIATE WS ADDRESS
-    var wsUrl = 'ws://luci007.local:8084/';
+    var wsUrlNormal = 'ws://localhost:8084/';
+    var wsUrlThermal = 'ws://localhost:8085/';
 
     // Show loading notice
     var canvas = document.getElementById('canvas-video');
@@ -39,9 +55,19 @@
     ctx.fillStyle = '#333';
     ctx.fillText('Loading...', canvas.width/2-30, canvas.height/3);
 
+    var canvas2 = document.getElementById('canvas-video2');
+    var ctx2 = canvas2.getContext('2d');
+    ctx2.fillStyle = '#333';
+    ctx2.fillText('Loading...', canvas2.width/2-30, canvas2.height/3);
+
+
     // Start the player
-    var client = new WebSocket(wsUrl);
+    var client = new WebSocket(wsUrlNormal);
     var player = new jsmpeg(client, { canvas:canvas });
+
+    var client2 = new WebSocket(wsUrlThermal);
+    var player2 = new jsmpeg(client2, { canvas:canvas2 });
+
   </script>
 </body>
 </html>

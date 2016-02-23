@@ -31,11 +31,12 @@ var height = 240;
 
 
 
-// WebSocket server
-var wsServer = new (ws.Server)({ port: configServer.wsPort });
-console.log('WebSocket server listening on port ' + configServer.wsPort);
+// WebSocket servers
+var wsServerNormal = new (ws.Server)({ port: configServer.wsPortNormal });
+var wsServerThermal = new (ws.Server)({ port: configServer.wsPortThermal });
+console.log('WebSocket server listening on port ' + configServer.wsPortNormal + ' and ' + configServer.wsPortThermal);
 
-wsServer.on('connection', function(socket) {
+wsServerNormal.on('connection', function(socket) {
   // Send magic bytes and video size to the newly connected socket
   // struct { char magic[4]; unsigned short width, height;}
   var streamHeader = new Buffer(8);
@@ -45,14 +46,42 @@ wsServer.on('connection', function(socket) {
   streamHeader.writeUInt16BE(height, 6);
   socket.send(streamHeader, { binary: true });
 
-  console.log('New WebSocket Connection (' + wsServer.clients.length + ' total)');
+  console.log('New WebSocket Connection (' + wsServerNormal.clients.length + ' total)');
 
   socket.on('close', function(code, message){
-    console.log('Disconnected WebSocket (' + wsServer.clients.length + ' total)');
+    console.log('Disconnected WebSocket (' + wsServerNormal.clients.length + ' total)');
   });
 });
 
-wsServer.broadcast = function(data, opts) {
+wsServerNormal.broadcast = function(data, opts) {
+  for(var i in this.clients) {
+    if(this.clients[i].readyState == 1) {
+      this.clients[i].send(data, opts);
+    }
+    else {
+      console.log('Error: Client (' + i + ') not connected.');
+    }
+  }
+};
+
+wsServerThermal.on('connection', function(socket) {
+  // Send magic bytes and video size to the newly connected socket
+  // struct { char magic[4]; unsigned short width, height;}
+  var streamHeader = new Buffer(8);
+
+  streamHeader.write(STREAM_MAGIC_BYTES);
+  streamHeader.writeUInt16BE(width, 4);
+  streamHeader.writeUInt16BE(height, 6);
+  socket.send(streamHeader, { binary: true });
+
+  console.log('New WebSocket Connection (' + wsServerThermal.clients.length + ' total)');
+
+  socket.on('close', function(code, message){
+    console.log('Disconnected WebSocket (' + wsServerThermal.clients.length + ' total)');
+  });
+});
+
+wsServerThermal.broadcast = function(data, opts) {
   for(var i in this.clients) {
     if(this.clients[i].readyState == 1) {
       this.clients[i].send(data, opts);
@@ -71,13 +100,31 @@ http.createServer(function (req, res) {
   );
 
   req.on('data', function (data) {
-    wsServer.broadcast(data, { binary: true });
+    wsServerNormal.broadcast(data, { binary: true });
   });
-}).listen(configServer.streamPort, function () {
-  console.log('Listening for video stream on port ' + configServer.streamPort);
+}).listen(configServer.streamPortNormal, function () {
+  console.log('Listening for video stream on port ' + configServer.streamPortNormal);
 
-  // Run do_ffmpeg.sh from node                                                   
-  childProcess.exec('../../bin/do_ffmpeg.sh');
+  // Run do_ffmpeg.sh from node
+  // childProcess.exec('../../bin/do_ffmpeg.sh');
 });
+
+http.createServer(function (req, res) {
+  console.log(
+    'Stream Connected: ' + req.socket.remoteAddress +
+    ':' + req.socket.remotePort + ' size: ' + width + 'x' + height
+  );
+
+  req.on('data', function (data) {
+    wsServerThermal.broadcast(data, { binary: true });
+  });
+}).listen(configServer.streamPortThermal, function () {
+  console.log('Listening for video stream on port ' + configServer.streamPortThermal);
+
+  // Run do_ffmpeg.sh from node
+  // childProcess.exec('../../bin/do_ffmpeg.sh');
+});
+
+
 
 module.exports.app = app;
