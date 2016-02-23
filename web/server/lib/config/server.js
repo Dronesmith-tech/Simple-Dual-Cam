@@ -7,4 +7,4 @@ module.exports = {
   wsPortNormal: 8084,
   wsPortThermal: 8085,
   staticFolder: path.join(__dirname + '/../../../client')
-};
+}
