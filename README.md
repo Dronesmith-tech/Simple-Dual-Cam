@@ -1,6 +1,8 @@
-# LUCI-CAM
-This project started as Edi-cam but was adapted to work on the LUCI board. 
-edi-cam demonstrates live video streaming on Intel Edison using Node.js and WebSockets. Audio is not supported at the moment. See the demo in action [here](http://youtu.be/nVDL2-bFT3Y).
+<img src="https://i2.wp.com/www.dronesmith.io/wp-content/uploads/2016/11/bbbbbthermalimaging.jpeg?w=1600">
+
+# LUCI CAM
+This project was adapted from Edicam but was adapted to work on the LUCI board. 
+edicam demonstrates live video streaming on Intel Edison using Node.js and WebSockets. Audio is not supported at the moment. See the demo in action [here](http://youtu.be/nVDL2-bFT3Y).
 
 The Node.js server is responsible for:
 
